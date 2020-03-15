@@ -138,6 +138,15 @@ export default class Controller extends React.Component<Props, State> {
             {} as Spotify.Track,
             this.props.state.track_window.current_track
         );
+
+        const customCssId = "custom-css";
+        let customCssElement = document.querySelector(`#${customCssId}`);
+        if (!customCssElement) {
+            customCssElement = document.createElement("style") as Element;
+            customCssElement.id = customCssId;
+            document.body.appendChild(customCssElement);
+        }
+        customCssElement.innerHTML = this.config.customCss || "";
     }
 
     render() {

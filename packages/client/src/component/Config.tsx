@@ -2,11 +2,13 @@ import React from "react";
 import classNames from "classnames";
 import { ChevronDown } from "react-feather";
 import { DisLike, DisLikeI } from "../db";
+import CodeFlask from "codeflask";
 
 const NavItems = {
     GENERAL: "全般",
     PLAY: "再生",
     DIS_LIKE: "低評価",
+    THEME: "テーマ",
 };
 
 export enum Theme {
@@ -19,9 +21,11 @@ export interface ConfigI {
     auto_auth?: boolean;
     theme?: Theme;
     auto_skip?: boolean;
+    customCss?: string;
 }
 
-type ValueOf<T> = T[keyof T] | { [index: string]: string };
+type AnyObject<T> = { [index: string]: T };
+type ValueOf<T> = T[keyof T] | AnyObject<string>;
 interface State extends ConfigI {
     selected: ValueOf<keyof typeof NavItems>;
     disLikes: PouchDB.Core.ExistingDocument<DisLikeI>[];
@@ -33,6 +37,14 @@ interface State extends ConfigI {
 
 export default class Config extends React.Component<{}, State> {
     private disLikes: DisLike;
+    private codeFlaskRef: React.RefObject<HTMLDivElement>;
+    private codeFlask?: CodeFlask;
+    private paneMapping = {
+        [NavItems.GENERAL]: this.general.bind(this),
+        [NavItems.PLAY]: this.play.bind(this),
+        [NavItems.DIS_LIKE]: this.disLike.bind(this),
+        [NavItems.THEME]: this.theme.bind(this),
+    };
 
     constructor(props: {}) {
         super(props);
@@ -46,16 +58,19 @@ export default class Config extends React.Component<{}, State> {
             disLikesLimit: 10,
             disLikesPage: 1,
             disLikesName: "",
+            customCss: "",
         };
-
+        this.codeFlaskRef = React.createRef<HTMLDivElement>();
         this.disLikes = new DisLike();
     }
 
     public async componentDidMount() {
+        let state = this.state;
         try {
-            const state = JSON.parse(localStorage.config || "{}");
-            if (Object.keys(state).length > 0) {
-                this.setState(state);
+            const nextState = JSON.parse(localStorage.config || "{}");
+            if (Object.keys(nextState).length > 0) {
+                this.setState(nextState);
+                state = nextState;
             }
         } catch (e) {
             // NOTE: localStorageに入ってないのでconstructorの初期値で継続する
@@ -63,10 +78,27 @@ export default class Config extends React.Component<{}, State> {
         }
 
         this.find(
-            this.state.disLikesLimit,
-            this.state.disLikesPage,
-            this.state.disLikesName
+            state.disLikesLimit,
+            state.disLikesPage,
+            state.disLikesName
         );
+
+        if (this.codeFlaskRef.current?.id) {
+            this.codeFlask = new CodeFlask(`#${this.codeFlaskRef.current?.id}`, {
+                language: "css",
+                lineNumbers: true,
+            });
+            this.codeFlask.onUpdate((code => {
+                this.setState({
+                    customCss: code
+                });
+            }));
+            this.codeFlask.updateCode(state.customCss || "");
+        }
+    }
+
+    public componentWillUnmount() {
+        delete this.codeFlask;
     }
 
     private find(limit: number, page: number, name: string) {
@@ -105,8 +137,8 @@ export default class Config extends React.Component<{}, State> {
                     {this.nav()}
                 </ul>
                 <div className={classNames("flex", "flex-1", "flex-col")}>
-                    <div className={classNames("flex-1", "overflow-auto")}>
-                        {this.activePane()}
+                    <div className={classNames("flex", "flex-1", "overflow-auto")}>
+                        {this.panes()}
                     </div>
                     <div
                         className={classNames(
@@ -140,7 +172,6 @@ export default class Config extends React.Component<{}, State> {
                                 "font-bold",
                                 "py-2",
                                 "px-4",
-                                "rounded-r",
                                 "focus:outline-none"
                             )}
                             onClick={() => {
@@ -160,26 +191,60 @@ export default class Config extends React.Component<{}, State> {
                         >
                             OK
                         </button>
+                        <button
+                            className={classNames(
+                                "bg-gray-300",
+                                "hover:bg-gray-400",
+                                "text-gray-800",
+                                "font-bold",
+                                "py-2",
+                                "px-4",
+                                "rounded-r",
+                                "focus:outline-none"
+                            )}
+                            onClick={() => {
+                                const config = { ...this.state };
+                                delete config.selected;
+                                delete config.disLikes;
+                                delete config.disLikesLoading;
+                                delete config.disLikesLimit;
+                                delete config.disLikesPage;
+                                delete config.disLikesName;
+                                localStorage.setItem(
+                                    "config",
+                                    JSON.stringify(config)
+                                );
+                            }}
+                        >
+                            適用
+                        </button>
                     </div>
                 </div>
             </div>
         );
     }
 
-    private activePane() {
-        switch (this.state.selected) {
-            case NavItems.GENERAL:
-                return this.general();
-            case NavItems.PLAY:
-                return this.play();
-            case NavItems.DIS_LIKE:
-                return this.disLike();
-        }
+    private panes() {
+        return Object.keys(this.paneMapping).map((paneKey, index) => {
+            const paneFunc = (this.paneMapping)[paneKey];
+            if (paneKey === this.state.selected) {
+                return (
+                    <div className={classNames("flex", "flex-col")}>
+                        {paneFunc()}
+                    </div>
+                );
+            }
+            return (
+                <div className={classNames("hidden")}>
+                    {paneFunc()}
+                </div>
+            );
+        });
     }
 
     private nav() {
         return Object.keys(NavItems).map((navItem, index) => {
-            const navText = (NavItems as { [index: string]: string })[navItem];
+            const navText = (NavItems as AnyObject<string>)[navItem];
             if (navText === this.state.selected) {
                 return (
                     <li key={index} className={classNames("flex-1", "mr-2")}>
@@ -240,64 +305,6 @@ export default class Config extends React.Component<{}, State> {
                             }}
                         />
                         自動的にログインする
-                    </label>
-                </div>
-                <div>
-                    <label>
-                        テーマ
-                        <div
-                            className={classNames(
-                                "relative",
-                                "w-auto",
-                                "inline-block"
-                            )}
-                        >
-                            <select
-                                className={classNames(
-                                    "appearance-none",
-                                    "bg-gray-200",
-                                    "border",
-                                    "border-gray-200",
-                                    "text-gray-700",
-                                    "py-3",
-                                    "px-4",
-                                    "pr-8",
-                                    "rounded",
-                                    "leading-tight",
-                                    "focus:outline-none",
-                                    "focus:bg-white",
-                                    "focus:border-gray-500"
-                                )}
-                                id="grid-state"
-                                value={this.state.theme}
-                                onChange={e => {
-                                    this.setState({
-                                        theme: e.target.value as Theme,
-                                    });
-                                }}
-                            >
-                                <option value={Theme.AUTO}>
-                                    自動（OSの設定に合わせる）
-                                </option>
-                                <option value={Theme.LIGHT}>ライト</option>
-                                <option value={Theme.DARK}>ダーク</option>
-                            </select>
-                            {/**/}
-                            <div
-                                className={classNames(
-                                    "pointer-events-none",
-                                    "absolute",
-                                    "inset-y-0",
-                                    "right-0",
-                                    "flex",
-                                    "items-center",
-                                    "px-2",
-                                    "text-gray-700"
-                                )}
-                            >
-                                <ChevronDown size={16} />
-                            </div>
-                        </div>
                     </label>
                 </div>
             </>
@@ -526,6 +533,88 @@ export default class Config extends React.Component<{}, State> {
                     さらに表示
                 </button>
             </div>
+        );
+    }
+
+    private theme() {
+        return (
+            <>
+                <div>
+                    <label>
+                        テーマ
+                        <div
+                            className={classNames(
+                                "relative",
+                                "w-auto",
+                                "inline-block"
+                            )}
+                        >
+                            <select
+                                className={classNames(
+                                    "appearance-none",
+                                    "bg-gray-200",
+                                    "border",
+                                    "border-gray-200",
+                                    "text-gray-700",
+                                    "py-3",
+                                    "px-4",
+                                    "pr-8",
+                                    "rounded",
+                                    "leading-tight",
+                                    "focus:outline-none",
+                                    "focus:bg-white",
+                                    "focus:border-gray-500"
+                                )}
+                                id="grid-state"
+                                value={this.state.theme}
+                                onChange={e => {
+                                    this.setState({
+                                        theme: e.target.value as Theme,
+                                    });
+                                }}
+                            >
+                                <option value={Theme.AUTO}>
+                                    自動（OSの設定に合わせる）
+                                </option>
+                                <option value={Theme.LIGHT}>ライト</option>
+                                <option value={Theme.DARK}>ダーク</option>
+                            </select>
+                            {/**/}
+                            <div
+                                className={classNames(
+                                    "pointer-events-none",
+                                    "absolute",
+                                    "inset-y-0",
+                                    "right-0",
+                                    "flex",
+                                    "items-center",
+                                    "px-2",
+                                    "text-gray-700"
+                                )}
+                            >
+                                <ChevronDown size={16} />
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <div className={classNames(
+                    "flex",
+                    "flex-col",
+                    "flex-1",
+                )}>
+                    カスタムCSS
+                    <div
+                        ref={this.codeFlaskRef}
+                        id={"codeflask"}
+                        className={classNames(
+                            "relative",
+                            "flex-1",
+                        )}
+                    />
+                </div>
+
+
+            </>
         );
     }
 }
