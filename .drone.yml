@@ -1,0 +1,51 @@
+---
+kind: pipeline
+name: default
+
+steps:
+  - name: docker build
+    image: plugins/docker
+    settings:
+      repo: mohemohe/littlify
+      username:
+        from_secret: dockerhub_username
+      password:
+        from_secret: dockerhub_password
+    when:
+      branch:
+        - develop
+
+  - name: deploy to ECS
+    image: pelotech/drone-ecs
+    settings:
+      region: ap-northeast-1
+      cluster: spotinst
+      service: littlify
+      family: littlify
+      docker_image: mohemohe/littlify
+      tag: latest
+      environment_variables:
+        - CLIENT_URI=https://littlify.plusminus.io
+        - SPOTIFY_REDIRECT_URI=https://littlify.plusminus.io/api/v1/callback
+      secret_environment_variables:
+        - SPOTIFY_CLIENT_ID
+        - SPOTIFY_CLIENT_SECRET
+      port_mappings:
+        - 0 80
+      memory_reservation: 256
+      desired_count: 1
+      deployment_configuration: 50 200
+      log_driver: awslogs
+      log_options:
+        - awslogs-group=/ecs/littlify
+        - awslogs-region=ap-northeast-1
+        - awslogs-stream-prefix=ecs
+    environment:
+      AWS_ACCESS_KEY:
+        from_secret: aws_access_key
+      AWS_SECRET_KEY:
+        from_secret: aws_secret_key
+      SPOTIFY_CLIENT_ID:
+        from_secret: spotify_client_id
+      SPOTIFY_CLIENT_SECRET:
+        from_secret: spotify_client_secret
