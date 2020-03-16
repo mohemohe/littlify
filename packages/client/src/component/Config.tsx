@@ -230,7 +230,7 @@ export default class Config extends React.Component<{}, State> {
             const paneFunc = (this.paneMapping)[paneKey];
             if (paneKey === this.state.selected) {
                 return (
-                    <div className={classNames("flex", "flex-col")}>
+                    <div className={classNames("flex", "flex-col", "flex-1")}>
                         {paneFunc()}
                     </div>
                 );
