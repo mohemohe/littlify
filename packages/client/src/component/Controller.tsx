@@ -113,10 +113,12 @@ export default class Controller extends React.Component<Props, State> {
         this.config = JSON.parse(localStorage.config || "{}");
         switch (this.config.theme) {
             case Theme.DARK:
-                document.documentElement.dataset["theme"] = "dark";
+                document.documentElement.classList.remove("theme-light");
+                document.documentElement.classList.add("theme-dark");
                 break;
             case Theme.LIGHT:
-                document.documentElement.dataset["theme"] = "light";
+                document.documentElement.classList.add("theme-light");
+                document.documentElement.classList.remove("theme-dark");
                 break;
             default:
                 // REF: https://github.com/ChanceArthur/tailwindcss-dark-mode/blob/master/prefers-dark.js
@@ -129,9 +131,11 @@ export default class Controller extends React.Component<Props, State> {
                         window.matchMedia("(prefers-color-scheme: dark)")
                             .matches
                     );
-                    document.documentElement.dataset["theme"] = "dark";
+                    document.documentElement.classList.remove("theme-light");
+                    document.documentElement.classList.add("theme-dark");
                 } else {
-                    document.documentElement.dataset["theme"] = "light";
+                    document.documentElement.classList.add("theme-light");
+                    document.documentElement.classList.remove("theme-dark");
                 }
         }
         this.onUpdateTrack(
