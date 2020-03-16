@@ -133,7 +133,8 @@ export default class Config extends React.Component<{}, State> {
     public render() {
         return (
             <div className={classNames("flex", "h-screen", "overflow-hidden")}>
-                <ul className={classNames("w-1/4", "overflow-auto")}>
+                {/* w-1/4 はPurgeCSS適用前のクラス, w-25pcはPurgeCSS適用後のdirty fix, コミットのマージ状況に応じて消す */}
+                <ul className={classNames("w-1/4", "w-25pc", "overflow-auto")}>
                     {this.nav()}
                 </ul>
                 <div className={classNames("flex", "flex-1", "flex-col")}>
