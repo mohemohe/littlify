@@ -69,30 +69,29 @@ export default class Config extends React.Component<{}, State> {
         try {
             const nextState = JSON.parse(localStorage.config || "{}");
             if (Object.keys(nextState).length > 0) {
-                this.setState(nextState);
-                state = nextState;
+                state = { ...state, ...nextState };
+                this.setState(state);
             }
         } catch (e) {
             // NOTE: localStorageに入ってないのでconstructorの初期値で継続する
             console.warn(e);
         }
 
-        this.find(
-            state.disLikesLimit,
-            state.disLikesPage,
-            state.disLikesName
-        );
+        this.find(state.disLikesLimit, state.disLikesPage, state.disLikesName);
 
         if (this.codeFlaskRef.current?.id) {
-            this.codeFlask = new CodeFlask(`#${this.codeFlaskRef.current?.id}`, {
-                language: "css",
-                lineNumbers: true,
-            });
-            this.codeFlask.onUpdate((code => {
+            this.codeFlask = new CodeFlask(
+                `#${this.codeFlaskRef.current?.id}`,
+                {
+                    language: "css",
+                    lineNumbers: true,
+                }
+            );
+            this.codeFlask.onUpdate(code => {
                 this.setState({
-                    customCss: code
+                    customCss: code,
                 });
-            }));
+            });
             this.codeFlask.updateCode(state.customCss || "");
         }
     }
@@ -138,7 +137,13 @@ export default class Config extends React.Component<{}, State> {
                     {this.nav()}
                 </ul>
                 <div className={classNames("flex", "flex-1", "flex-col")}>
-                    <div className={classNames("flex", "flex-1", "overflow-auto")}>
+                    <div
+                        className={classNames(
+                            "flex",
+                            "flex-1",
+                            "overflow-auto"
+                        )}
+                    >
                         {this.panes()}
                     </div>
                     <div
@@ -227,19 +232,15 @@ export default class Config extends React.Component<{}, State> {
 
     private panes() {
         return Object.keys(this.paneMapping).map((paneKey, index) => {
-            const paneFunc = (this.paneMapping)[paneKey];
+            const paneFunc = this.paneMapping[paneKey];
             if (paneKey === this.state.selected) {
                 return (
-                    <div className={classNames("flex", "flex-col")}>
+                    <div className={classNames("flex", "flex-col", "flex-1")}>
                         {paneFunc()}
                     </div>
                 );
             }
-            return (
-                <div className={classNames("hidden")}>
-                    {paneFunc()}
-                </div>
-            );
+            return <div className={classNames("hidden")} key={index}>{paneFunc()}</div>;
         });
     }
 
@@ -380,7 +381,7 @@ export default class Config extends React.Component<{}, State> {
                                             "text-gray-700"
                                         )}
                                     >
-                                        <ChevronDown size={16}/>
+                                        <ChevronDown size={16} />
                                     </div>
                                 </div>
                             </label>
@@ -598,23 +599,14 @@ export default class Config extends React.Component<{}, State> {
                         </div>
                     </label>
                 </div>
-                <div className={classNames(
-                    "flex",
-                    "flex-col",
-                    "flex-1",
-                )}>
+                <div className={classNames("flex", "flex-col", "flex-1")}>
                     カスタムCSS
                     <div
                         ref={this.codeFlaskRef}
                         id={"codeflask"}
-                        className={classNames(
-                            "relative",
-                            "flex-1",
-                        )}
+                        className={classNames("relative", "flex-1")}
                     />
                 </div>
-
-
             </>
         );
     }

@@ -7,7 +7,7 @@ import {
     ChevronRight,
     Sliders,
     Twitter,
-    ThumbsDown
+    ThumbsDown,
 } from "react-feather";
 
 import ExternalLink from "./ExternalLink";
