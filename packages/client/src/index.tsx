@@ -74,7 +74,7 @@ class App extends React.Component<Props, State> {
             const appName =
                 process.env.NODE_ENV === "development"
                     ? "Littlify (Dev)"
-                    : "Littlify";
+                    : "Littlify (EDGE)";
             const player = new Spotify.Player({
                 name: appName,
                 volume: 0.15,
