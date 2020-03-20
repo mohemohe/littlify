@@ -2,7 +2,7 @@ import React from "react";
 import classNames from "classnames";
 import { ChevronDown } from "react-feather";
 import { DisLike, DisLikeI } from "../db";
-import CodeFlask from "codeflask";
+import Editor from "./Editor";
 
 const NavItems = {
     GENERAL: "全般",
@@ -37,8 +37,6 @@ interface State extends ConfigI {
 
 export default class Config extends React.Component<{}, State> {
     private disLikes: DisLike;
-    private codeFlaskRef: React.RefObject<HTMLDivElement>;
-    private codeFlask?: CodeFlask;
     private paneMapping = {
         [NavItems.GENERAL]: this.general.bind(this),
         [NavItems.PLAY]: this.play.bind(this),
@@ -60,7 +58,6 @@ export default class Config extends React.Component<{}, State> {
             disLikesName: "",
             customCss: "",
         };
-        this.codeFlaskRef = React.createRef<HTMLDivElement>();
         this.disLikes = new DisLike();
     }
 
@@ -78,26 +75,6 @@ export default class Config extends React.Component<{}, State> {
         }
 
         this.find(state.disLikesLimit, state.disLikesPage, state.disLikesName);
-
-        if (this.codeFlaskRef.current?.id) {
-            this.codeFlask = new CodeFlask(
-                `#${this.codeFlaskRef.current?.id}`,
-                {
-                    language: "css",
-                    lineNumbers: true,
-                }
-            );
-            this.codeFlask.onUpdate(code => {
-                this.setState({
-                    customCss: code,
-                });
-            });
-            this.codeFlask.updateCode(state.customCss || "");
-        }
-    }
-
-    public componentWillUnmount() {
-        delete this.codeFlask;
     }
 
     private find(limit: number, page: number, name: string) {
@@ -240,7 +217,11 @@ export default class Config extends React.Component<{}, State> {
                     </div>
                 );
             }
-            return <div className={classNames("hidden")} key={index}>{paneFunc()}</div>;
+            return (
+                <div className={classNames("hidden")} key={index}>
+                    {paneFunc()}
+                </div>
+            );
         });
     }
 
@@ -601,10 +582,18 @@ export default class Config extends React.Component<{}, State> {
                 </div>
                 <div className={classNames("flex", "flex-col", "flex-1")}>
                     カスタムCSS
-                    <div
-                        ref={this.codeFlaskRef}
-                        id={"codeflask"}
+                    <Editor
                         className={classNames("relative", "flex-1")}
+                        code={this.state.customCss || ""}
+                        options={{
+                            language: "css",
+                            lineNumbers: true,
+                        }}
+                        onUpdate={code => {
+                            this.setState({
+                                customCss: code,
+                            });
+                        }}
                     />
                 </div>
             </>
