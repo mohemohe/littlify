@@ -65,6 +65,7 @@ export default class Player extends React.Component<Props, {}> {
                     >
                         <div
                             className={classNames(
+                                "track-pane",
                                 "flex-1",
                                 "flex",
                                 "items-center",
@@ -75,15 +76,24 @@ export default class Player extends React.Component<Props, {}> {
                                 "dark:text-gray-200"
                             )}
                         >
-                            <div className={classNames("font-medium")}>
+                            <div
+                                className={classNames(
+                                    "track-wrapper",
+                                    "font-medium"
+                                )}
+                            >
                                 <SpotifyURILink
-                                    className={classNames("text-2xl")}
+                                    className={classNames(
+                                        "track-name",
+                                        "text-2xl"
+                                    )}
                                     uri={track.uri}
                                 >
                                     {track.name}
                                 </SpotifyURILink>
                                 <p
                                     className={classNames(
+                                        "artists-name",
                                         "mt-1",
                                         "text-sm",
                                         "text-gray-700",
@@ -92,7 +102,10 @@ export default class Player extends React.Component<Props, {}> {
                                 >
                                     <Artists artists={track.artists} />
                                     {" - "}
-                                    <SpotifyURILink uri={track.album.uri}>
+                                    <SpotifyURILink
+                                        className={classNames("album-name")}
+                                        uri={track.album.uri}
+                                    >
                                         {track.album.name}
                                     </SpotifyURILink>
                                 </p>
@@ -105,6 +118,9 @@ export default class Player extends React.Component<Props, {}> {
                                     )}
                                 >
                                     <SpotifyURILink
+                                        className={classNames(
+                                            "context-description"
+                                        )}
                                         uri={state.context.uri || "#"}
                                     >
                                         {
@@ -130,14 +146,18 @@ export default class Player extends React.Component<Props, {}> {
                             "dark:border-gray-700"
                         )}
                     >
-                        <p>前のトラック</p>
-                        {previousTracks.map((track, index) => {
-                            return <MiniTrack track={track} key={index} />;
-                        })}
-                        <p>次のトラック</p>
-                        {nextTracks.map((track, index) => {
-                            return <MiniTrack track={track} key={index} />;
-                        })}
+                        <div className={classNames("previous-tracks")}>
+                            <p className={classNames("header")}>前のトラック</p>
+                            {previousTracks.map((track, index) => {
+                                return <MiniTrack track={track} key={index} />;
+                            })}
+                        </div>
+                        <div className={classNames("next-tracks")}>
+                            <p className={classNames("header")}>次のトラック</p>
+                            {nextTracks.map((track, index) => {
+                                return <MiniTrack track={track} key={index} />;
+                            })}
+                        </div>
                     </div>
                 </div>
             </>

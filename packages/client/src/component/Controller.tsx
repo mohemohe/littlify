@@ -167,6 +167,7 @@ export default class Controller extends React.Component<Props, State> {
             >
                 <div
                     className={classNames(
+                        "dislike-button",
                         "hover:text-gray-500",
                         "dark:hover:text-gray-600"
                     )}
@@ -191,6 +192,7 @@ export default class Controller extends React.Component<Props, State> {
                 </div>
                 <div
                     className={classNames(
+                        "rewind-button",
                         "flex-1",
                         "py-3",
                         "hover:text-gray-500",
@@ -209,6 +211,8 @@ export default class Controller extends React.Component<Props, State> {
                 </div>
                 <div
                     className={classNames(
+                        "play-pause-button",
+                        state.paused ? "play-button" : "pause-button",
                         "hover:text-gray-500",
                         "dark:hover:text-gray-600"
                     )}
@@ -224,6 +228,7 @@ export default class Controller extends React.Component<Props, State> {
                 </div>
                 <div
                     className={classNames(
+                        "forward-button",
                         "hover:text-gray-500",
                         "dark:hover:text-gray-600"
                     )}
@@ -235,6 +240,7 @@ export default class Controller extends React.Component<Props, State> {
                 </div>
                 <div
                     className={classNames(
+                        "config-button",
                         "hover:text-gray-500",
                         "dark:hover:text-gray-600"
                     )}
@@ -250,6 +256,7 @@ export default class Controller extends React.Component<Props, State> {
                 </div>
                 <ExternalLink
                     className={classNames(
+                        "tweet-button",
                         "flex-none",
                         "h-full",
                         "px-8",
