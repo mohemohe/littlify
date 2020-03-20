@@ -60,7 +60,7 @@ class App extends React.Component<Props, State> {
         });
 
         if (!state || state.paused) {
-            document.title = "Littlify";
+            document.title = "Littlify (EDGE)";
         } else {
             const currentTrack = state.track_window.current_track;
             const artists = currentTrack.artists.map(v => v.name).join(", ");
