@@ -3,6 +3,14 @@ kind: pipeline
 name: default
 
 steps:
+  - name: discord notification on start
+    image: plugins/slack
+    settings:
+      webhook:
+        from_secret: discord_webhook
+      template: >
+        {{repo.owner}}/{{repo.name}} ({{build.branch}}) build #{{build.number}} start: {{build.link}}
+
   - name: docker build
     image: plugins/docker
     settings:
@@ -50,8 +58,16 @@ steps:
       SPOTIFY_CLIENT_SECRET:
         from_secret: spotify_client_secret
 
-  - name: discord notification
+  - name: discord notification on complete
     image: plugins/slack
     settings:
       webhook:
         from_secret: discord_webhook
+      template: >
+        {{#success build.status}}
+          {{repo.owner}}/{{repo.name}} ({{build.branch}}) build #{{build.number}} succeeded: {{build.link}}
+        {{else}}
+          {{repo.owner}}/{{repo.name}} ({{build.branch}}) build #{{build.number}} failed: {{build.link}}
+        {{/success}}
+    when:
+      status: [ success, failure ]
