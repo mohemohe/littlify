@@ -33,7 +33,7 @@ steps:
       port_mappings:
         - 0 80
       memory_reservation: 256
-      desired_count: 1
+      desired_count: 2
       deployment_configuration: 50 200
       log_driver: awslogs
       log_options:
