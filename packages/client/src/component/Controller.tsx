@@ -189,11 +189,6 @@ export default class Controller extends React.Component<Props, State> {
                     document.documentElement.classList.remove("theme-dark");
                 }
         }
-        this.onUpdateTrack(
-            {} as Spotify.Track,
-            this.props.state.track_window.current_track
-        );
-
         const customCssId = "custom-css";
         let customCssElement = document.querySelector(`#${customCssId}`);
         if (!customCssElement) {
@@ -202,6 +197,11 @@ export default class Controller extends React.Component<Props, State> {
             document.body.appendChild(customCssElement);
         }
         customCssElement.innerHTML = this.config.customCss || "";
+
+        this.onUpdateTrack(
+            {} as Spotify.Track,
+            this.props.state.track_window.current_track
+        );
     }
 
     render() {
