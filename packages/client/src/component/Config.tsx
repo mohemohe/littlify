@@ -21,6 +21,7 @@ export interface ConfigI {
     auto_auth?: boolean;
     theme?: Theme;
     auto_skip?: boolean;
+    skip_at_dislike?: boolean;
     customCss?: string;
 }
 
@@ -309,6 +310,20 @@ export default class Config extends React.Component<{}, State> {
                             }}
                         />
                         低評価にした曲を自動的にスキップする
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        <input
+                            type={"checkbox"}
+                            checked={!!this.state.skip_at_dislike}
+                            onChange={e => {
+                                this.setState({
+                                    skip_at_dislike: e.target.checked,
+                                });
+                            }}
+                        />
+                        低評価ボタンをクリックしたら曲をすぐにスキップする
                     </label>
                 </div>
             </>
