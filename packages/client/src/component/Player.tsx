@@ -128,7 +128,7 @@ export default class Player extends React.Component<Props, {}> {
                     </div>
                     <div
                         className={classNames(
-                            "track-column",
+                            "right-column",
                             "flex-1",
                             "flex",
                             "flex-col",
@@ -137,99 +137,123 @@ export default class Player extends React.Component<Props, {}> {
                     >
                         <div
                             className={classNames(
-                                "track-pane",
+                                "track-column",
                                 "flex-1",
                                 "flex",
-                                "items-center",
-                                "pl-8",
-                                "text-gray-900",
-                                "bg-white",
-                                "dark:bg-gray-900",
-                                "dark:text-gray-200"
+                                "flex-row",
+                                "w-full"
                             )}
                         >
                             <div
                                 className={classNames(
-                                    "track-wrapper",
-                                    "font-medium"
+                                    "track-pane",
+                                    "flex-1",
+                                    "flex",
+                                    "items-center",
+                                    "pl-8",
+                                    "text-gray-900",
+                                    "bg-white",
+                                    "dark:bg-gray-900",
+                                    "dark:text-gray-200"
                                 )}
                             >
-                                <SpotifyURILink
+                                <div
                                     className={classNames(
-                                        "track-name",
-                                        "text-2xl"
-                                    )}
-                                    uri={track.uri}
-                                >
-                                    {track.name}
-                                </SpotifyURILink>
-                                <p
-                                    className={classNames(
-                                        "artists-name",
-                                        "mt-1",
-                                        "text-sm",
-                                        "text-gray-700",
-                                        "dark:text-gray-500"
-                                    )}
-                                >
-                                    <Artists artists={track.artists} />
-                                    {" - "}
-                                    <SpotifyURILink
-                                        className={classNames("album-name")}
-                                        uri={track.album.uri}
-                                    >
-                                        {track.album.name}
-                                    </SpotifyURILink>
-                                </p>
-                                <p
-                                    className={classNames(
-                                        "mt-1",
-                                        "text-sm",
-                                        "text-gray-700",
-                                        "dark:text-gray-500"
+                                        "track-wrapper",
+                                        "font-medium"
                                     )}
                                 >
                                     <SpotifyURILink
                                         className={classNames(
-                                            "context-description"
+                                            "track-name",
+                                            "text-2xl"
                                         )}
-                                        uri={state.context.uri || "#"}
+                                        uri={track.uri}
                                     >
-                                        {
-                                            state.context.metadata
-                                                .context_description
-                                        }
+                                        {track.name}
                                     </SpotifyURILink>
-                                </p>
+                                    <p
+                                        className={classNames(
+                                            "artists-name",
+                                            "mt-1",
+                                            "text-sm",
+                                            "text-gray-700",
+                                            "dark:text-gray-500"
+                                        )}
+                                    >
+                                        <Artists artists={track.artists} />
+                                        {" - "}
+                                        <SpotifyURILink
+                                            className={classNames("album-name")}
+                                            uri={track.album.uri}
+                                        >
+                                            {track.album.name}
+                                        </SpotifyURILink>
+                                    </p>
+                                    <p
+                                        className={classNames(
+                                            "mt-1",
+                                            "text-sm",
+                                            "text-gray-700",
+                                            "dark:text-gray-500"
+                                        )}
+                                    >
+                                        <SpotifyURILink
+                                            className={classNames(
+                                                "context-description"
+                                            )}
+                                            uri={state.context.uri || "#"}
+                                        >
+                                            {
+                                                state.context.metadata
+                                                    .context_description
+                                            }
+                                        </SpotifyURILink>
+                                    </p>
+                                </div>
+                            </div>
+                            <div
+                                className={classNames(
+                                    "queue-column",
+                                    "flex",
+                                    "flex-col",
+                                    "w-25vw",
+                                    "border-l",
+                                    "dark:border-gray-700"
+                                )}
+                            >
+                                <div className={classNames("previous-tracks")}>
+                                    <p className={classNames("header")}>
+                                        前のトラック
+                                    </p>
+                                    {previousTracks.map((track, index) => {
+                                        return (
+                                            <MiniTrack
+                                                track={track}
+                                                key={index}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                                <div className={classNames("next-tracks")}>
+                                    <p className={classNames("header")}>
+                                        次のトラック
+                                    </p>
+                                    {nextTracks.map((track, index) => {
+                                        return (
+                                            <MiniTrack
+                                                track={track}
+                                                key={index}
+                                            />
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
                         <Controller
                             state={{ ...this.props.state }}
                             player={this.props.player}
                         />
-                    </div>
-                    <div
-                        className={classNames(
-                            "queue-column",
-                            "flex",
-                            "flex-col",
-                            "w-25pc",
-                            "border-l",
-                            "dark:border-gray-700"
-                        )}
-                    >
-                        <div className={classNames("previous-tracks")}>
-                            <p className={classNames("header")}>前のトラック</p>
-                            {previousTracks.map((track, index) => {
-                                return <MiniTrack track={track} key={index} />;
-                            })}
-                        </div>
-                        <div className={classNames("next-tracks")}>
-                            <p className={classNames("header")}>次のトラック</p>
-                            {nextTracks.map((track, index) => {
-                                return <MiniTrack track={track} key={index} />;
-                            })}
-                        </div>
                     </div>
                 </div>
             </>
