@@ -75,9 +75,14 @@ class App extends React.Component<Props, State> {
                 process.env.NODE_ENV === "development"
                     ? "Littlify (Dev)"
                     : "Littlify (EDGE)";
+            localStorage.mute = localStorage.mute || `${false}`;
+            localStorage.volume = localStorage.volume || "0.15";
             const player = new Spotify.Player({
                 name: appName,
-                volume: 0.15,
+                volume:
+                    localStorage.mute === `${true}`
+                        ? 0
+                        : parseFloat(localStorage.volume),
                 getOAuthToken: (cb: (accessToken: string) => void) => {
                     console.log("新しいアクセストークン取るよ");
                     axios

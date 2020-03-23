@@ -8,6 +8,10 @@ import {
     Sliders,
     Twitter,
     ThumbsDown,
+    Volume,
+    Volume1,
+    Volume2,
+    VolumeX,
 } from "react-feather";
 
 import ExternalLink from "./ExternalLink";
@@ -24,7 +28,11 @@ interface State {
     updatedPosition: number;
     onSeek: boolean;
     disLike: boolean;
+    volume: number;
+    mute: boolean;
 }
+
+const maxVolume = 1000;
 
 export default class Controller extends React.Component<Props, State> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,10 +50,17 @@ export default class Controller extends React.Component<Props, State> {
             updatedPosition: 0,
             onSeek: false,
             disLike: false,
+            volume: 0,
+            mute: false,
         };
     }
 
     public componentDidMount() {
+        this.setState({
+            volume: parseFloat(localStorage.volume) * maxVolume,
+            mute: localStorage.mute === `${true}`,
+        });
+
         window.addEventListener("storage", this.onUpdateConfig);
         this.onUpdateConfig();
 
@@ -204,6 +219,14 @@ export default class Controller extends React.Component<Props, State> {
         );
     }
 
+    private onChangeVolume() {
+        if (this.state.mute) {
+            this.props.player.setVolume(0);
+        } else {
+            this.props.player.setVolume(this.state.volume / maxVolume);
+        }
+    }
+
     render() {
         const { state } = this.props;
         const track = state.track_window.current_track;
@@ -211,155 +234,242 @@ export default class Controller extends React.Component<Props, State> {
             <div
                 className={classNames(
                     "controller-column",
-                    "relative",
                     "flex",
-                    "items-center",
-                    "select-none",
                     "bg-gray-200",
                     "border-t",
                     "dark:bg-gray-800",
                     "dark:border-gray-700"
                 )}
             >
-                <input
-                    id={"player-seekbar"}
-                    type="range"
-                    min="0"
-                    max={state.duration}
-                    value={this.state.calculatedPosition}
-                    onMouseDown={() => {
-                        this.setState({
-                            onSeek: true,
-                        });
-                    }}
-                    onChange={e => {
-                        this.setState({
-                            calculatedPosition: parseInt(
-                                e.currentTarget.value,
-                                10
-                            ),
-                        });
-                    }}
-                    onMouseUp={e => {
-                        this.props.player?.seek(
-                            parseInt(e.currentTarget.value, 10)
-                        );
-                        this.setState({
-                            onSeek: false,
-                        });
-                    }}
-                />
                 <div
                     className={classNames(
-                        "dislike-button",
-                        "hover:text-gray-500",
-                        "dark:hover:text-gray-600"
+                        "relative",
+                        "flex",
+                        "flex-1",
+                        "items-center",
+                        "select-none"
                     )}
-                    onClick={async () => {
-                        if (this.state.disLike) {
-                            await this.disLikes.unset(DisLikeType.TRACK, track);
+                >
+                    <input
+                        id={"player-seekbar"}
+                        className={classNames("input-bar")}
+                        type="range"
+                        min="0"
+                        max={state.duration}
+                        value={this.state.calculatedPosition}
+                        onMouseDown={() => {
                             this.setState({
-                                disLike: false,
+                                onSeek: true,
                             });
-                        } else {
-                            await this.disLikes.set(DisLikeType.TRACK, track);
+                        }}
+                        onChange={e => {
+                            this.setState({
+                                calculatedPosition: parseInt(
+                                    e.currentTarget.value,
+                                    10
+                                ),
+                            });
+                        }}
+                        onMouseUp={e => {
+                            this.props.player?.seek(
+                                parseInt(e.currentTarget.value, 10)
+                            );
+                            this.setState({
+                                onSeek: false,
+                            });
+                        }}
+                    />
+                    <div
+                        className={classNames(
+                            "dislike-button",
+                            "hover:text-gray-500",
+                            "dark:hover:text-gray-600"
+                        )}
+                        onClick={async () => {
+                            if (this.state.disLike) {
+                                await this.disLikes.unset(
+                                    DisLikeType.TRACK,
+                                    track
+                                );
+                                this.setState({
+                                    disLike: false,
+                                });
+                            } else {
+                                await this.disLikes.set(
+                                    DisLikeType.TRACK,
+                                    track
+                                );
+                                this.setState(
+                                    {
+                                        disLike: true,
+                                    },
+                                    () => {
+                                        if (this.config.skip_at_dislike) {
+                                            this.props.player?.nextTrack();
+                                        }
+                                    }
+                                );
+                            }
+                        }}
+                    >
+                        <ThumbsDown
+                            size={16}
+                            style={{ opacity: this.state.disLike ? 1 : 0.3 }}
+                        />
+                    </div>
+                    <div
+                        className={classNames(
+                            "rewind-button",
+                            "flex-1",
+                            "py-3",
+                            "hover:text-gray-500",
+                            "dark:hover:text-gray-600"
+                        )}
+                        onClick={async () => {
+                            const currentState =
+                                (await this.props.player.getCurrentState()) ||
+                                null;
+                            if (currentState && currentState.position < 5000) {
+                                this.props.player.previousTrack();
+                            }
+                            this.props.player.seek(0);
+                        }}
+                    >
+                        <ChevronLeft size={16} />
+                    </div>
+                    <div
+                        className={classNames(
+                            "play-pause-button",
+                            state.paused ? "play-button" : "pause-button",
+                            "hover:text-gray-500",
+                            "dark:hover:text-gray-600"
+                        )}
+                        onClick={() => {
+                            this.props.player?.togglePlay();
+                        }}
+                    >
+                        {state.paused ? (
+                            <Play className={classNames("filled")} size={20} />
+                        ) : (
+                            <Pause className={classNames("filled")} size={20} />
+                        )}
+                    </div>
+                    <div
+                        className={classNames(
+                            "forward-button",
+                            "hover:text-gray-500",
+                            "dark:hover:text-gray-600"
+                        )}
+                        onClick={() => {
+                            this.props.player?.nextTrack();
+                        }}
+                    >
+                        <ChevronRight size={16} />
+                    </div>
+                    <div
+                        className={classNames(
+                            "config-button",
+                            "hover:text-gray-500",
+                            "dark:hover:text-gray-600"
+                        )}
+                        onClick={() => {
+                            window.open(
+                                "/config",
+                                "_blank",
+                                "toolbar=0,location=0,menubar=0,width=960,height=600"
+                            );
+                        }}
+                    >
+                        <Sliders size={16} />
+                    </div>
+                    <ExternalLink
+                        className={classNames(
+                            "tweet-button",
+                            "flex-none",
+                            "h-full",
+                            "px-8",
+                            "hover:text-gray-500",
+                            "dark:hover:text-gray-600"
+                        )}
+                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                            `${track.name}\r\n${track.artists[0].name} - ${track.album.name}\r\nhttps://open.spotify.com/track/${track.id}`
+                        )}`}
+                    >
+                        <Twitter className={classNames("filled")} size={16} />
+                    </ExternalLink>
+                </div>
+                <div
+                    className={classNames(
+                        "w-25vw",
+                        "relative",
+                        "flex",
+                        "items-center",
+                        "select-none",
+                        "border-l",
+                        "dark:border-gray-700"
+                    )}
+                >
+                    <div
+                        className={classNames(
+                            "mute-button",
+                            "hover:text-gray-500",
+                            "dark:hover:text-gray-600"
+                        )}
+                        onClick={async () => {
                             this.setState(
                                 {
-                                    disLike: true,
+                                    mute: !this.state.mute,
                                 },
                                 () => {
-                                    if (this.config.skip_at_dislike) {
-                                        this.props.player?.nextTrack();
-                                    }
+                                    localStorage.setItem(
+                                        "mute",
+                                        `${this.state.mute}`
+                                    );
+                                    this.onChangeVolume();
                                 }
                             );
-                        }
-                    }}
-                >
-                    <ThumbsDown
-                        size={16}
-                        style={{ opacity: this.state.disLike ? 1 : 0.3 }}
+                        }}
+                    >
+                        {this.state.mute && <VolumeX size={16} />}
+                        {!this.state.mute &&
+                            this.state.volume >= 0 &&
+                            this.state.volume <= maxVolume / 3 && (
+                                <Volume size={16} />
+                            )}
+                        {!this.state.mute &&
+                            this.state.volume > maxVolume / 3 &&
+                            this.state.volume <= (maxVolume / 3) * 2 && (
+                                <Volume1 size={16} />
+                            )}
+                        {!this.state.mute &&
+                            this.state.volume > (maxVolume / 3) * 2 && (
+                                <Volume2 size={16} />
+                            )}
+                    </div>
+                    <input
+                        id={"player-volumebar"}
+                        className={classNames("input-bar", "flex-1")}
+                        type="range"
+                        min={0}
+                        max={maxVolume}
+                        value={this.state.mute ? 0 : this.state.volume}
+                        onChange={e => {
+                            this.setState(
+                                {
+                                    volume: parseInt(e.currentTarget.value, 10),
+                                    mute: false,
+                                },
+                                () => {
+                                    localStorage.setItem(
+                                        "volume",
+                                        `${this.state.volume / maxVolume}`
+                                    );
+                                    this.onChangeVolume();
+                                }
+                            );
+                        }}
                     />
                 </div>
-                <div
-                    className={classNames(
-                        "rewind-button",
-                        "flex-1",
-                        "py-3",
-                        "hover:text-gray-500",
-                        "dark:hover:text-gray-600"
-                    )}
-                    onClick={async () => {
-                        const currentState =
-                            (await this.props.player.getCurrentState()) || null;
-                        if (currentState && currentState.position < 5000) {
-                            this.props.player.previousTrack();
-                        }
-                        this.props.player.seek(0);
-                    }}
-                >
-                    <ChevronLeft size={16} />
-                </div>
-                <div
-                    className={classNames(
-                        "play-pause-button",
-                        state.paused ? "play-button" : "pause-button",
-                        "hover:text-gray-500",
-                        "dark:hover:text-gray-600"
-                    )}
-                    onClick={() => {
-                        this.props.player?.togglePlay();
-                    }}
-                >
-                    {state.paused ? (
-                        <Play className={classNames("filled")} size={20} />
-                    ) : (
-                        <Pause className={classNames("filled")} size={20} />
-                    )}
-                </div>
-                <div
-                    className={classNames(
-                        "forward-button",
-                        "hover:text-gray-500",
-                        "dark:hover:text-gray-600"
-                    )}
-                    onClick={() => {
-                        this.props.player?.nextTrack();
-                    }}
-                >
-                    <ChevronRight size={16} />
-                </div>
-                <div
-                    className={classNames(
-                        "config-button",
-                        "hover:text-gray-500",
-                        "dark:hover:text-gray-600"
-                    )}
-                    onClick={() => {
-                        window.open(
-                            "/config",
-                            "_blank",
-                            "toolbar=0,location=0,menubar=0,width=960,height=600"
-                        );
-                    }}
-                >
-                    <Sliders size={16} />
-                </div>
-                <ExternalLink
-                    className={classNames(
-                        "tweet-button",
-                        "flex-none",
-                        "h-full",
-                        "px-8",
-                        "hover:text-gray-500",
-                        "dark:hover:text-gray-600"
-                    )}
-                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                        `${track.name}\r\n${track.artists[0].name} - ${track.album.name}\r\nhttps://open.spotify.com/track/${track.id}`
-                    )}`}
-                >
-                    <Twitter className={classNames("filled")} size={16} />
-                </ExternalLink>
             </div>
         );
     }
